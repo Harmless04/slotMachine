@@ -12,7 +12,7 @@ let chalk;
 (async () => {
   chalk = (await import('chalk')).default;
 
-const ROWS = 3;
+const ROWS = 6; // Changed from 3 to 6
 const COLS = 3;
 
 const SYMBOLS_COUNT = {
@@ -44,10 +44,10 @@ const deposit = () => {
 
 const getNumberOfLines = () => {
   while (true) {
-    const lines = prompt("Enter the number of lines to bet on (1-3): ");
+    const lines = prompt("Enter the number of lines to bet on (3-6): ");
     const numberOfLines = parseFloat(lines);
 
-    if (isNaN(numberOfLines) || numberOfLines <= 0 || numberOfLines > 3) {
+    if (isNaN(numberOfLines) || numberOfLines < 3 || numberOfLines > 6) {
       console.log("Invalid number of lines, try again.");
     } else {
       return numberOfLines;
@@ -80,7 +80,7 @@ const spin = () => {
   for (let i = 0; i < COLS; i++) {
     reels.push([]);
     const reelSymbols = [...symbols];
-    for (let j = 0; j < ROWS; j++) {
+    for (let j = 0; j < ROWS; j++) { // Now generates 6 rows per reel
       const randomIndex = Math.floor(Math.random() * reelSymbols.length);
       const selectedSymbol = reelSymbols[randomIndex];
       reels[i].push(selectedSymbol);
@@ -94,7 +94,7 @@ const spin = () => {
 const transpose = (reels) => {
   const rows = [];
 
-  for (let i = 0; i < ROWS; i++) {
+  for (let i = 0; i < ROWS; i++) { // Now transposes up to 6 rows
     rows.push([]);
     for (let j = 0; j < COLS; j++) {
       rows[i].push(reels[j][i]);
@@ -119,7 +119,9 @@ const getWinnings = (rows, bet, lines) => {
       winnings += bet * SYMBOL_VALUES[symbols[0]];
     }
   }
-  return winnings;
+  // Increase winnings as lines increase: 3 lines = x1, 4 lines = x1.5, 5 lines = x2, 6 lines = x2.5
+  const multiplier = 1 + (lines - 3) * 0.5;
+  return Math.floor(winnings * multiplier);
 };
 
 const printRows = (rows) => {
@@ -168,7 +170,11 @@ const printRows = (rows) => {
       const winnings = getWinnings(rows, bet, numberOfLines);
       balance += winnings;
       if (winnings > 0) {
-        console.log(chalk.greenBright.bold(`\nYou won $${winnings}! 🎉`));
+        console.log(
+          chalk.greenBright.bold(
+            `\nYou won $${winnings}! 🎉 (Line multiplier: x${1 + (numberOfLines - 3) * 0.5})`
+          )
+        );
       } else {
         console.log(chalk.redBright.bold("\nNo win this time. Try again!"));
       }
