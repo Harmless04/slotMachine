@@ -135,3 +135,30 @@ const getWinnings = (rows, bet, lines) => {
   return winnings;
 };
 
+const game = () => {
+  let balance = deposit();
+
+  while (true) {
+    console.log("You have a balance of $" + balance);
+    const numberOfLines = getNumberOfLines();
+    const bet = getBet(balance, numberOfLines);
+    balance -= bet * numberOfLines;
+    const reels = spin();
+    const rows = transpose(reels);
+    printRows(rows);
+    const winnings = getWinnings(rows, bet, numberOfLines);
+    balance += winnings;
+    console.log("You won, $" + winnings.toString());
+
+    if (balance <= 0) {
+      console.log("You ran out of money!");
+      break;
+    }
+
+    const playAgain = prompt("Do you want to play again (y/n)? ");
+
+    if (playAgain != "y") break;
+  }
+};
+
+game();
