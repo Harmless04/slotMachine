@@ -8,6 +8,10 @@
 
 const prompt = require("prompt-sync")();
 
+let chalk;
+(async () => {
+  chalk = (await import('chalk')).default;
+
 const ROWS = 3;
 const COLS = 3;
 
@@ -100,65 +104,87 @@ const transpose = (reels) => {
   return rows;
 };
 
-const printRows = (rows) => {
-  for (const row of rows) {
-    let rowString = "";
-    for (const [i, symbol] of row.entries()) {
-      rowString += symbol;
-      if (i != row.length - 1) {
-        rowString += " | ";
-      }
-    }
-    console.log(rowString);
-  }
-};
-
 const getWinnings = (rows, bet, lines) => {
   let winnings = 0;
-
   for (let row = 0; row < lines; row++) {
     const symbols = rows[row];
     let allSame = true;
-
     for (const symbol of symbols) {
       if (symbol != symbols[0]) {
         allSame = false;
         break;
       }
     }
-
     if (allSame) {
       winnings += bet * SYMBOL_VALUES[symbols[0]];
     }
   }
-
   return winnings;
 };
 
-const game = () => {
-  let balance = deposit();
-
-  while (true) {
-    console.log("You have a balance of $" + balance);
-    const numberOfLines = getNumberOfLines();
-    const bet = getBet(balance, numberOfLines);
-    balance -= bet * numberOfLines;
-    const reels = spin();
-    const rows = transpose(reels);
-    printRows(rows);
-    const winnings = getWinnings(rows, bet, numberOfLines);
-    balance += winnings;
-    console.log("You won, $" + winnings.toString());
-
-    if (balance <= 0) {
-      console.log("You ran out of money!");
-      break;
+const printRows = (rows) => {
+    const border = "+---+---+---+";
+    console.log(border);
+    for (const row of rows) {
+      let rowString = "|";
+      for (const symbol of row) {
+        rowString += ` ${symbol} |`;
+      }
+      console.log(rowString);
+      console.log(border);
     }
+  };
 
-    const playAgain = prompt("Do you want to play again (y/n)? ");
+  const printHeader = () => {
+    console.clear();
+    console.log(chalk.cyan.bold("====================================="));
+    console.log(chalk.cyan.bold("      WELCOME TO SLOT MACHINE!       "));
+    console.log(chalk.cyan.bold("====================================="));
+  };
 
-    if (playAgain != "y") break;
-  }
-};
+  const printGoodbye = () => {
+    console.log(chalk.yellow.bold("\nThanks for playing! Goodbye!\n"));
+  };
 
-game();
+  const game = () => {
+    printHeader();
+    let balance = deposit();
+
+    while (true) {
+      console.log(chalk.green.bold("\n-------------------------------------"));
+      console.log("Your current balance: " + chalk.yellow(`$${balance}`));
+      const numberOfLines = getNumberOfLines();
+      const bet = getBet(balance, numberOfLines);
+      console.log(
+        chalk.blue(
+          `\nBetting $${bet} on ${numberOfLines} line${numberOfLines > 1 ? "s" : ""}...`
+        )
+      );
+      balance -= bet * numberOfLines;
+      console.log(chalk.gray("\nSpinning...\n"));
+      const reels = spin();
+      const rows = transpose(reels);
+      printRows(rows);
+      const winnings = getWinnings(rows, bet, numberOfLines);
+      balance += winnings;
+      if (winnings > 0) {
+        console.log(chalk.greenBright.bold(`\nYou won $${winnings}! 🎉`));
+      } else {
+        console.log(chalk.redBright.bold("\nNo win this time. Try again!"));
+      }
+
+      if (balance <= 0) {
+        console.log(chalk.red.bold("\nYou ran out of money!"));
+        break;
+      }
+
+      const playAgain = prompt(chalk.magenta("\nDo you want to play again (y/n)? "));
+
+      if (playAgain.toLowerCase() != "y") break;
+      printHeader();
+    }
+    printGoodbye();
+  };
+
+  game();
+})();
